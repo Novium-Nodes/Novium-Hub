@@ -1,5 +1,5 @@
 // ====== الإعدادات الأساسية لجوجل ======
-const CLIENT_ID = 'حط_ال_CLIENT_ID_بتاعك_هنا.apps.googleusercontent.com';
+const CLIENT_ID = '265333396119-7pdoruuiu9h3v59gremlndjpmnbn59ck.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file'; 
 
 let tokenClient;
