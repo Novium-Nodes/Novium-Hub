@@ -22,11 +22,3 @@
   * يتم تحويل الصورة الشخصية المرفوعة فوراً إلى نص مشفر (`Base64 String`) ويتم تحديثها داخل سكشن الـ `profiles` في ملف الـ `JSON` السحابي لتظهر من أي جهاز.
 
 ---
-
-## 🛠️ التجهيز البرمجي وضبط الإعدادات (Developer Setup)
-
-لكي يعمل السيستم على الحسابات والملفات الخاصة بك بشكل صحيح، يجب مراجعة السطور الأولى في ملف الـ JavaScript وضبط المتغيرات الثابتة الخاصة ببيئة العمل:
-
-```javascript
-const CLIENT_ID = '265333396119-7pdoruuiu9h3v59gremlndjpmnbn59ck.apps.googleusercontent.com';
-const FILE_ID = 'https://drive.google.com/file/d/1aM4Wf2lK-sJVZNVcrp_7sgl0-gCPyA-B/view?usp=drive_link';
