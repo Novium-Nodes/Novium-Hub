@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yousef Mohammed | Portfolio</title>
+    <title>Novium Hub</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -20,10 +20,15 @@
         </div>
 
         <header class="profile-header">
-            <div class="avatar-wrapper">
-                <img src="logo.jpg" alt="Yousef" class="avatar">
+            <!-- جزء الصورة بعد التحديث لدعم الـ Upload المخفي -->
+            <div class="avatar-wrapper" id="avatar-container" style="position: relative; display: inline-block;">
+                <img src="assets/logo.jpg" alt="Yousef" class="avatar" id="user-avatar">
+                <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
+                <div id="upload-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); color: #fff; border-radius: 50%; justify-content: center; align-items: center; cursor: pointer; font-size: 12px;">
+                    <i class="fas fa-camera"></i>
+                </div>
             </div>
-            <h1>youssif mohammed</h1>
+            <h1 id="user-display-name">youssif mohammed</h1>
             <p class="subtitle">Full-Stack Web Developer & Cybersecurity Enthusiast</p>
             <div class="social-links">
                 <a href="https://github.com/Novium-Nodes" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
@@ -40,7 +45,7 @@
             </div>
             
             <div class="projects-grid" id="projects-container">
-                </div>
+            </div>
         </main>
 
         <footer>
