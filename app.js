@@ -89,7 +89,7 @@ async function checkExistingAuth() {
         document.getElementById('user-status').innerText = 'وضع الزائر 👀 (عرض فقط)';
         
         showAdminUI(false);
-        if (userAvatar) userAvatar.src = 'logo.jpg';
+        if (userAvatar) userAvatar.src = 'assets/logo.jpg';
         if (userDisplayName) userDisplayName.innerText = 'NoviumNodes Team';
         
         await loadDataHub(false);
