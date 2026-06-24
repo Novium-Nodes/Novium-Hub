@@ -1,0 +1,342 @@
+/* إعدادات الخطوط والألوان الأساسية */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700&display=swap');
+
+:root {
+    --bg-color: #0b0f19;
+    --panel-bg: rgba(17, 25, 40, 0.75);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-color: #f3f4f6;
+    --accent-cyan: #00f2fe;
+    --accent-purple: #4facfe;
+    --modal-bg: rgba(11, 15, 25, 0.9);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Cairo', sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(79, 172, 254, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(0, 242, 254, 0.15) 0px, transparent 50%);
+    color: var(--text-color);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 850px;
+}
+
+/* شريط التحكم السحابي بالأعلى */
+.auth-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    padding: 10px 20px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    backdrop-filter: blur(10px);
+}
+
+.auth-bar span {
+    font-size: 0.9rem;
+    color: #9ca3af;
+}
+
+.auth-bar button {
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#login-btn {
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+    color: #0b0f19;
+}
+#login-btn:hover { box-shadow: 0 0 15px rgba(0, 242, 254, 0.5); }
+
+#logout-btn {
+    background: rgba(220, 53, 69, 0.2);
+    border: 1px solid #dc3545;
+    color: #ff6b6b;
+}
+#logout-btn:hover { background: #dc3545; color: #fff; }
+
+/* الهيدر والبروفايل */
+.profile-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.avatar-wrapper {
+    width: 110px;
+    height: 110px;
+    margin: 0 auto 20px;
+    position: relative;
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid var(--accent-cyan);
+    object-fit: cover;
+    box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+}
+
+.profile-header h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    background: linear-gradient(45deg, var(--accent-purple), var(--accent-cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+    color: #9ca3af;
+    font-size: 1rem;
+    margin-bottom: 15px;
+}
+
+.social-links a {
+    color: var(--text-color);
+    font-size: 1.5rem;
+    margin: 0 12px;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.social-links a:hover {
+    transform: scale(1.15);
+}
+.social-links a[title="GitHub"]:hover { color: #fff; }
+.social-links a[title="LinkedIn"]:hover { color: #0077b5; }
+.social-links a[title="Instagram"]:hover { color: #e1306c; }
+.social-links a[title="TikTok"]:hover { color: #ff0050; }
+
+/* قسم المشاريع */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    border-right: 4px solid var(--accent-purple);
+    padding-right: 12px;
+}
+
+.section-header h2 {
+    font-size: 1.4rem;
+}
+
+/* زر الزائد (+) الصايع */
+.add-project-btn {
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+    border: none;
+    color: #0b0f19;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+}
+
+.add-project-btn:hover {
+    transform: rotate(90deg) scale(1.1);
+    box-shadow: 0 0 25px rgba(0, 242, 254, 0.7);
+}
+
+.projects-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* بطاقات المشاريع الزجاجية */
+.project-card {
+    background: var(--panel-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.project-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(0, 242, 254, 0.4);
+    box-shadow: 0 10px 25px rgba(0, 242, 254, 0.1);
+}
+
+.card-content h3 {
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+/* البادج الخاص بلغة البرمجة */
+.badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: bold;
+}
+.badge.js { background-color: #f7df1e; color: #000; }
+.badge.html { background-color: #e34c26; color: #fff; }
+.badge.node { background-color: #339933; color: #fff; }
+
+.card-content p {
+    color: #9ca3af;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+/* حاوية أزرار التحكم داخل الكرت */
+.card-actions {
+    display: flex;
+    gap: 12px;
+}
+
+/* أزرار اللينكات المشتركة */
+.project-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.live-btn {
+    background: linear-gradient(135deg, rgba(79, 172, 254, 0.2), rgba(0, 242, 254, 0.2));
+    border: 1px solid var(--accent-cyan);
+}
+.live-btn:hover {
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+    color: #0b0f19;
+}
+
+.repo-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.repo-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* تصميم الـ Modal للشاشات المنبثقة */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #0f172a;
+    border: 1px solid var(--border-color);
+    padding: 30px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.modal-header h3 {
+    font-size: 1.2rem;
+    color: var(--accent-cyan);
+}
+
+.close-btn {
+    background: none; border: none; color: #9ca3af;
+    font-size: 1.8rem; cursor: pointer;
+}
+.close-btn:hover { color: #fff; }
+
+.form-group {
+    margin-bottom: 15px;
+    text-align: right;
+}
+
+.form-group label {
+    display: block; margin-bottom: 5px; font-size: 0.9rem; color: #9ca3af;
+}
+
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px; background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-color); border-radius: 8px;
+    color: #fff; font-size: 0.9rem; outline: none;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--accent-cyan);
+}
+
+.submit-btn {
+    width: 100%; padding: 12px; background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+    border: none; border-radius: 8px; color: #0b0f19; font-weight: bold;
+    font-size: 1rem; cursor: pointer; transition: all 0.3s ease;
+}
+.submit-btn:hover {
+    box-shadow: 0 0 20px rgba(0, 242, 254, 0.5);
+}
+
+footer {
+    text-align: center;
+    margin-top: 50px;
+    color: #4b5563;
+    font-size: 0.85rem;
+}
+
+/* الـ Responsive لمقاسات الشاشات المختلفة */
+@media (max-width: 600px) {
+    body { padding: 20px 10px; }
+    .profile-header h1 { font-size: 1.8rem; }
+    .project-card { padding: 18px; }
+    .card-actions { flex-direction: column; }
+}
