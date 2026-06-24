@@ -2,10 +2,10 @@
 const CLIENT_ID = '265333396119-7pdoruuiu9h3v59gremlndjpmnbn59ck.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file'; 
 
-// ⚠️ تم تعديله لوضع الـ ID الصافي لملفك لتفادي الأخطاء وفخ الـ CORS
+// المعرّف الصافي للملف على جوجل درايف
 const FILE_ID = '1aM4Wf2lK-sJVZNVcrp_7sgl0-gCPyA-B'; 
 
-// 📧 إيميلات الأدمنز المسموح لهم بالتعديل ورفع الصور الشخصية
+// إيميلات الأدمنز المصرح لهم
 const ADMIN_EMAILS = {
     yousef: 'hak307gaming@gmail.com',
     mohamed: '#'
@@ -48,8 +48,7 @@ const modal = document.getElementById('project-modal');
 const openModalBtn = document.getElementById('open-modal-btn');
 const closeModalBtn = document.getElementById('close-modal-btn');
 const form = document.getElementById('add-project-form');
-const userAvatar = document.getElementById('user-avatar');
-const avatarUpload = document.getElementById('avatar-upload');
+const userAvatar = document.querySelector('.avatar'); // تم إصلاح التحديد ليطابق الهيكل في index.html
 const uploadOverlay = document.getElementById('upload-overlay');
 const userDisplayName = document.getElementById('user-display-name');
 
@@ -76,7 +75,6 @@ async function checkExistingAuth() {
     const savedEmail = localStorage.getItem('logged_in_email');
 
     if (savedToken && (savedEmail === ADMIN_EMAILS.yousef || savedEmail === ADMIN_EMAILS.mohamed)) {
-        // مستخدم أدمن مسجل (أنت أو محمد)
         gapi.client.setToken(JSON.parse(savedToken));
         document.getElementById('login-btn').style.display = 'none';
         document.getElementById('logout-btn').style.display = 'inline-block';
@@ -86,27 +84,28 @@ async function checkExistingAuth() {
         setupAvatarUpload(savedEmail);
         await loadDataHub(true);
     } else {
-        // زائر عادي أو حساب موحد (Guest Mode)
         document.getElementById('login-btn').style.display = 'inline-block';
         document.getElementById('logout-btn').style.display = 'none';
         document.getElementById('user-status').innerText = 'وضع الزائر 👀 (عرض فقط)';
         
         showAdminUI(false);
-        if (userAvatar) userAvatar.src = 'assets/logo.jpg';
-        if (userDisplayName) userDisplayName.innerText = 'NoviumNodes Team';
+        if (userAvatar) userAvatar.src = 'logo.jpg';
+        if (userDisplayName) userDisplayName.innerText = 'youssif mohammed';
         if (uploadOverlay) uploadOverlay.style.display = 'none';
         
-        await loadDataHub(false); // تحميل سحابي للقراءة فقط للـ Guest دون CORS
+        await loadDataHub(false);
     }
 }
 
 // ====== تسجيل الدخول وفك التوكن لمعرفة الإيميل ======
 function handleAuthClick() {
     tokenClient.callback = async (resp) => {
-        if (resp.error !== undefined) throw (resp);
+        if (resp.error !== undefined) {
+            console.error("خطأ أثناء تسجيل الدخول:", resp);
+            return;
+        }
         localStorage.setItem('google_drive_token', JSON.stringify(gapi.client.getToken()));
         
-        // جلب بيانات الإيميل لمعرفة من قام بتسجيل الدخول
         try {
             const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
                 headers: { Authorization: `Bearer ${resp.access_token}` }
@@ -117,7 +116,7 @@ function handleAuthClick() {
             console.error("خطأ في جلب بيانات الإيميل:", e);
         }
         
-        checkExistingAuth();
+        await checkExistingAuth();
     };
     tokenClient.requestAccessToken({prompt: 'consent'});
 }
@@ -127,10 +126,10 @@ function handleSignoutClick() {
     if (token !== null) {
         google.accounts.oauth2.revokeToken(token.access_token);
         gapi.client.setToken('');
-        localStorage.removeItem('google_drive_token');
-        localStorage.removeItem('logged_in_email');
-        location.reload();
     }
+    localStorage.removeItem('google_drive_token');
+    localStorage.removeItem('logged_in_email');
+    location.reload();
 }
 
 function showAdminUI(isAdmin) {
@@ -138,14 +137,34 @@ function showAdminUI(isAdmin) {
     adminElements.forEach(el => el.style.display = isAdmin ? 'flex' : 'none');
 }
 
-// ====== التعامل مع الصور السحابية وتفعيل الـ Upload للأدمن ======
 function setupAvatarUpload(email) {
-    const container = document.getElementById('avatar-container');
-    if (!container || !uploadOverlay || !avatarUpload) return;
+    const container = document.querySelector('.avatar-wrapper');
+    if (!container) return;
 
-    container.onmouseenter = () => uploadOverlay.style.display = 'flex';
-    container.onmouseleave = () => uploadOverlay.style.display = 'none';
-    uploadOverlay.onclick = () => avatarUpload.click();
+    // إنشاء حقل الرفع ديناميكياً إذا لم يكن موجوداً في الـ HTML
+    let avatarUpload = document.getElementById('avatar-upload');
+    if (!avatarUpload) {
+        avatarUpload = document.createElement('input');
+        avatarUpload.type = 'file';
+        avatarUpload.id = 'avatar-upload';
+        avatarUpload.accept = 'image/*';
+        avatarUpload.style.display = 'none';
+        document.body.appendChild(avatarUpload);
+    }
+
+    let overlay = document.getElementById('upload-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'upload-overlay';
+        overlay.innerHTML = '<i class="fas fa-camera"></i>';
+        overlay.style.cssText = "position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:none; justify-content:center; align-items:center; color:#fff; cursor:pointer; border-radius:50%;";
+        container.style.position = 'relative';
+        container.appendChild(overlay);
+    }
+
+    container.onmouseenter = () => overlay.style.display = 'flex';
+    container.onmouseleave = () => overlay.style.display = 'none';
+    overlay.onclick = () => avatarUpload.click();
 
     avatarUpload.onchange = (e) => {
         const file = e.target.files[0];
@@ -159,57 +178,55 @@ function setupAvatarUpload(email) {
             if (email === ADMIN_EMAILS.yousef) {
                 fullData.profiles.yousef.avatar = base64Img;
                 fullData.profiles.yousef.name = "Yousef Mohammed";
-            } else if (email === ADMIN_EMAILS.mohamed) {
-                fullData.profiles.mohamed.avatar = base64Img;
-                fullData.profiles.mohamed.name = "Mohamed";
             }
-            
             await updateDataOnDrive();
         };
         reader.readAsDataURL(file);
     };
 }
 
-// ====== جلب البيانات سحابياً (تجاوز الـ CORS للأدمن والـ Guest المجهول) ======
+// ====== جلب البيانات السحابية بأمان تام ======
 async function loadDataHub(isAdmin) {
     try {
-        let responseData;
+        let responseData = null;
+        
         if (isAdmin) {
-            // الأدمن يقرأ عبر مكتبة GAPI الموثقة بالتوكن بأمان
+            // الأدمن يقرأ عبر الـ GAPI الموثق بالكامل لتخطي الـ CORS
             const response = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });
             responseData = response.result;
         } else {
-            // الـ Guest يقرأ برابط مباشر مخصص للتحميل لتفادي حظر الـ CORS نهائياً
-            const fetchRes = await fetch(`https://docs.google.com/uc?export=download&id=${fileId}`);
-            if (!fetchRes.ok) throw new Error('فشل التحميل العام للملف');
-            responseData = await fetchRes.json();
-        }
-
-        fullData = responseData || { profiles: { yousef: {}, mohamed: {} }, projects: [] };
-        if (!fullData.projects) fullData.projects = [];
-        if (!fullData.profiles) fullData.profiles = { yousef: {}, mohamed: {} };
-
-        // تحديث معلومات الواجهة للأدمن الفعلي
-        if (isAdmin) {
-            const email = localStorage.getItem('logged_in_email');
-            if (email === ADMIN_EMAILS.yousef) {
-                if (userDisplayName) userDisplayName.innerText = fullData.profiles.yousef.name || "Yousef Mohammed";
-                if (userAvatar) userAvatar.src = fullData.profiles.yousef.avatar || "assets/logo.jpg";
-            } else if (email === ADMIN_EMAILS.mohamed) {
-                if (userDisplayName) userDisplayName.innerText = fullData.profiles.mohamed.name || "Mohamed";
-                if (userAvatar) userAvatar.src = fullData.profiles.mohamed.avatar || "assets/logo.jpg";
+            // الـ Guest يعتمد على آلية صامتة لعدم حجب الصفحة نهائياً في حالة حظر الـ CORS
+            try {
+                const fetchRes = await fetch(`https://docs.google.com/uc?export=download&id=${fileId}`);
+                if (fetchRes.ok) responseData = await fetchRes.json();
+            } catch (corsErr) {
+                console.warn("حظر طلب الـ Guest بسبب CORS، الانتقال للوضع الآمن المباشر.");
             }
         }
 
-        renderProjects([...defaultProjects, ...fullData.projects]);
+        if (responseData) {
+            fullData = responseData;
+            if (!fullData.projects) fullData.projects = [];
+            if (!fullData.profiles) fullData.profiles = { yousef: {}, mohamed: {} };
+            
+            if (isAdmin) {
+                const email = localStorage.getItem('logged_in_email');
+                if (email === ADMIN_EMAILS.yousef && fullData.profiles.yousef) {
+                    if (userAvatar && fullData.profiles.yousef.avatar) userAvatar.src = fullData.profiles.yousef.avatar;
+                }
+            }
+            renderProjects([...defaultProjects, ...fullData.projects]);
+        } else {
+            renderProjects(defaultProjects);
+        }
 
     } catch (err) {
-        console.error('فشل في مزامنة البيانات السحابية، تحويل للافتراضي فقط:', err);
+        console.error('خطأ عام في المزامنة السحابية:', err);
         renderProjects(defaultProjects);
     }
 }
 
-// ====== تحديث البيانات على الدرايف (مغلق ومحمي للأدمن فقط) ======
+// ====== تحديث البيانات على الدرايف ======
 async function updateDataOnDrive() {
     if (!fileId) return;
     try {
@@ -221,7 +238,7 @@ async function updateDataOnDrive() {
     } catch (err) { console.error('خطأ أثناء رفع البيانات المحدثة للدرايف:', err); }
 }
 
-// ====== دالة الـ Render وبناء الكروت بالـ DOM ======
+// ====== دالة بناء الكروت بالـ DOM ======
 function renderProjects(allProjects) {
     if (!container) return;
     container.innerHTML = '';
@@ -261,6 +278,7 @@ if (form) {
             repo: document.getElementById('github-repo').value
         };
 
+        if (!fullData.projects) fullData.projects = [];
         fullData.projects.push(newProj);
         renderProjects([...defaultProjects, ...fullData.projects]);
         form.reset();
