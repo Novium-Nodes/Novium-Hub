@@ -48,9 +48,9 @@ const modal = document.getElementById('project-modal');
 const openModalBtn = document.getElementById('open-modal-btn');
 const closeModalBtn = document.getElementById('close-modal-btn');
 const form = document.getElementById('add-project-form');
-const userAvatar = document.querySelector('.avatar'); // تم إصلاح التحديد ليطابق الهيكل في index.html
-const uploadOverlay = document.getElementById('upload-overlay');
+const userAvatar = document.getElementById('user-avatar');
 const userDisplayName = document.getElementById('user-display-name');
+const loadingScreen = document.getElementById('loading-screen');
 
 function gapiLoaded() { gapi.load('client', initializeGapiClient); }
 async function initializeGapiClient() {
@@ -90,20 +90,30 @@ async function checkExistingAuth() {
         
         showAdminUI(false);
         if (userAvatar) userAvatar.src = 'logo.jpg';
-        if (userDisplayName) userDisplayName.innerText = 'youssif mohammed';
-        if (uploadOverlay) uploadOverlay.style.display = 'none';
+        if (userDisplayName) userDisplayName.innerText = 'NoviumNodes Team';
         
         await loadDataHub(false);
     }
+    
+    // 🚪 إخفاء شاشة التحميل بمجرد اكتمال الفحص والاستقرار
+    hideLoading();
 }
 
-// ====== تسجيل الدخول وفك التوكن لمعرفة الإيميل ======
+function hideLoading() {
+    if (loadingScreen) {
+        loadingScreen.style.opacity = '0';
+        setTimeout(() => loadingScreen.style.display = 'none', 500);
+    }
+}
+
+// ====== تسجيل الدخول ======
 function handleAuthClick() {
     tokenClient.callback = async (resp) => {
         if (resp.error !== undefined) {
             console.error("خطأ أثناء تسجيل الدخول:", resp);
             return;
         }
+        if (loadingScreen) loadingScreen.style.display = 'flex'; // إعادة تفعيل اللودينج أثناء المزامنة
         localStorage.setItem('google_drive_token', JSON.stringify(gapi.client.getToken()));
         
         try {
@@ -138,10 +148,9 @@ function showAdminUI(isAdmin) {
 }
 
 function setupAvatarUpload(email) {
-    const container = document.querySelector('.avatar-wrapper');
+    const container = document.getElementById('avatar-container');
     if (!container) return;
 
-    // إنشاء حقل الرفع ديناميكياً إذا لم يكن موجوداً في الـ HTML
     let avatarUpload = document.getElementById('avatar-upload');
     if (!avatarUpload) {
         avatarUpload = document.createElement('input');
@@ -185,22 +194,20 @@ function setupAvatarUpload(email) {
     };
 }
 
-// ====== جلب البيانات السحابية بأمان تام ======
+// ====== جلب البيانات السحابية ======
 async function loadDataHub(isAdmin) {
     try {
         let responseData = null;
         
         if (isAdmin) {
-            // الأدمن يقرأ عبر الـ GAPI الموثق بالكامل لتخطي الـ CORS
             const response = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });
             responseData = response.result;
         } else {
-            // الـ Guest يعتمد على آلية صامتة لعدم حجب الصفحة نهائياً في حالة حظر الـ CORS
             try {
                 const fetchRes = await fetch(`https://docs.google.com/uc?export=download&id=${fileId}`);
                 if (fetchRes.ok) responseData = await fetchRes.json();
             } catch (corsErr) {
-                console.warn("حظر طلب الـ Guest بسبب CORS، الانتقال للوضع الآمن المباشر.");
+                console.warn("حظر الـ Guest بسبب CORS، الانتقال التلقائي للبيانات الافتراضية.");
             }
         }
 
@@ -212,6 +219,7 @@ async function loadDataHub(isAdmin) {
             if (isAdmin) {
                 const email = localStorage.getItem('logged_in_email');
                 if (email === ADMIN_EMAILS.yousef && fullData.profiles.yousef) {
+                    if (userDisplayName) userDisplayName.innerText = fullData.profiles.yousef.name || "Yousef Mohammed";
                     if (userAvatar && fullData.profiles.yousef.avatar) userAvatar.src = fullData.profiles.yousef.avatar;
                 }
             }
@@ -238,7 +246,7 @@ async function updateDataOnDrive() {
     } catch (err) { console.error('خطأ أثناء رفع البيانات المحدثة للدرايف:', err); }
 }
 
-// ====== دالة بناء الكروت بالـ DOM ======
+// ====== دالة الـ Render ======
 function renderProjects(allProjects) {
     if (!container) return;
     container.innerHTML = '';
@@ -262,7 +270,7 @@ function renderProjects(allProjects) {
     });
 }
 
-// ====== التحكم بالـ Modal وإرسال الفورم ======
+// ====== التحكم بالـ Modal ======
 if (openModalBtn) openModalBtn.onclick = () => { if (modal) modal.style.display = 'flex'; };
 if (closeModalBtn) closeModalBtn.onclick = () => { if (modal) modal.style.display = 'none'; };
 window.onclick = (e) => { if (modal && e.target === modal) modal.style.display = 'none'; };
