@@ -1,6 +1,6 @@
 // ====== الإعدادات الأساسية لجوجل ======
 const CLIENT_ID = '265333396119-7pdoruuiu9h3v59gremlndjpmnbn59ck.apps.googleusercontent.com';
-const SCOPES = 'https://www.googleapis.com/auth/drive.file'; 
+const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';
 
 // المعرّف الصافي للملف على جوجل درايف
 const FILE_ID = '1aM4Wf2lK-sJVZNVcrp_7sgl0-gCPyA-B'; 
