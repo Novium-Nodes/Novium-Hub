@@ -2,8 +2,8 @@
 const CLIENT_ID = '265333396119-7pdoruuiu9h3v59gremlndjpmnbn59ck.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file'; 
 
-// ⚠️ ضع هنا الـ ID الخاص بملف novium_dash_data.json من جوجل درايف الخاص بك
-const FILE_ID = 'https://drive.google.com/file/d/1aM4Wf2lK-sJVZNVcrp_7sgl0-gCPyA-B/view?usp=drive_link'; 
+// ⚠️ تم تعديله لوضع الـ ID الصافي لملفك لتفادي الأخطاء وفخ الـ CORS
+const FILE_ID = '1aM4Wf2lK-sJVZNVcrp_7sgl0-gCPyA-B'; 
 
 // 📧 إيميلات الأدمنز المسموح لهم بالتعديل ورفع الصور الشخصية
 const ADMIN_EMAILS = {
@@ -92,12 +92,11 @@ async function checkExistingAuth() {
         document.getElementById('user-status').innerText = 'وضع الزائر 👀 (عرض فقط)';
         
         showAdminUI(false);
-        // إعادة تعيين الواجهة لملف التيم الافتراضي
-        userAvatar.src = 'assets/logo.jpg';
-        userDisplayName.innerText = 'NoviumNodes Team';
-        uploadOverlay.style.display = 'none';
+        if (userAvatar) userAvatar.src = 'assets/logo.jpg';
+        if (userDisplayName) userDisplayName.innerText = 'NoviumNodes Team';
+        if (uploadOverlay) uploadOverlay.style.display = 'none';
         
-        await loadDataHub(false); // تحميل سحابي للقراءة فقط للـ Guest
+        await loadDataHub(false); // تحميل سحابي للقراءة فقط للـ Guest دون CORS
     }
 }
 
@@ -141,13 +140,13 @@ function showAdminUI(isAdmin) {
 
 // ====== التعامل مع الصور السحابية وتفعيل الـ Upload للأدمن ======
 function setupAvatarUpload(email) {
-    // تفعيل ظهور طبقة الرفع عند الوقوف بالماوس
     const container = document.getElementById('avatar-container');
+    if (!container || !uploadOverlay || !avatarUpload) return;
+
     container.onmouseenter = () => uploadOverlay.style.display = 'flex';
     container.onmouseleave = () => uploadOverlay.style.display = 'none';
     uploadOverlay.onclick = () => avatarUpload.click();
 
-    // معالجة اختيار ملف صورة جديد وتحويله لـ Base64
     avatarUpload.onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -155,9 +154,8 @@ function setupAvatarUpload(email) {
         const reader = new FileReader();
         reader.onloadend = async () => {
             const base64Img = reader.result;
-            userAvatar.src = base64Img; // عرضها فوري
+            if (userAvatar) userAvatar.src = base64Img; 
             
-            // حفظ الصورة في الجزء الخاص بالمستخدم داخل الـ JSON
             if (email === ADMIN_EMAILS.yousef) {
                 fullData.profiles.yousef.avatar = base64Img;
                 fullData.profiles.yousef.name = "Yousef Mohammed";
@@ -172,37 +170,37 @@ function setupAvatarUpload(email) {
     };
 }
 
-// ====== جلب البيانات سحابياً (يدعم الأدمن والـ Guest المجهول) ======
+// ====== جلب البيانات سحابياً (تجاوز الـ CORS للأدمن والـ Guest المجهول) ======
 async function loadDataHub(isAdmin) {
     try {
-        let response;
+        let responseData;
         if (isAdmin) {
-            // الأدمن يقرأ عبر مكتبة GAPI الموثقة بالتوكن
-            response = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });
-            fullData = response.result || { profiles: { yousef: {}, mohamed: {} }, projects: [] };
+            // الأدمن يقرأ عبر مكتبة GAPI الموثقة بالتوكن بأمان
+            const response = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });
+            responseData = response.result;
         } else {
-            // الـ Guest يقرأ بطلب فتش عام بدون توكن نهائياً لضمان الأمان الفولاذي
-            const fetchRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=حط_هنا_API_KEY_لو_أردت_أو_اتركه_يعتمد_على_العام`);
-            fullData = await fetchRes.json();
+            // الـ Guest يقرأ برابط مباشر مخصص للتحميل لتفادي حظر الـ CORS نهائياً
+            const fetchRes = await fetch(`https://docs.google.com/uc?export=download&id=${fileId}`);
+            if (!fetchRes.ok) throw new Error('فشل التحميل العام للملف');
+            responseData = await fetchRes.json();
         }
 
-        // التأكد من هيكلة الملف الإجمالية لحمايته من الأخطاء
+        fullData = responseData || { profiles: { yousef: {}, mohamed: {} }, projects: [] };
         if (!fullData.projects) fullData.projects = [];
         if (!fullData.profiles) fullData.profiles = { yousef: {}, mohamed: {} };
 
-        // تخصيص الاسم والصورة بناءً على هوية الشخص المسجل
+        // تحديث معلومات الواجهة للأدمن الفعلي
         if (isAdmin) {
             const email = localStorage.getItem('logged_in_email');
             if (email === ADMIN_EMAILS.yousef) {
-                userDisplayName.innerText = fullData.profiles.yousef.name || "Yousef Mohammed";
-                userAvatar.src = fullData.profiles.yousef.avatar || "assets/logo.jpg";
+                if (userDisplayName) userDisplayName.innerText = fullData.profiles.yousef.name || "Yousef Mohammed";
+                if (userAvatar) userAvatar.src = fullData.profiles.yousef.avatar || "assets/logo.jpg";
             } else if (email === ADMIN_EMAILS.mohamed) {
-                userDisplayName.innerText = fullData.profiles.mohamed.name || "Mohamed";
-                userAvatar.src = fullData.profiles.mohamed.avatar || "assets/logo.jpg";
+                if (userDisplayName) userDisplayName.innerText = fullData.profiles.mohamed.name || "Mohamed";
+                if (userAvatar) userAvatar.src = fullData.profiles.mohamed.avatar || "assets/logo.jpg";
             }
         }
 
-        // دمج المشاريع الثابتة مع الديناميكية المرفوعة سحابياً وعرضها للكل
         renderProjects([...defaultProjects, ...fullData.projects]);
 
     } catch (err) {
@@ -225,6 +223,7 @@ async function updateDataOnDrive() {
 
 // ====== دالة الـ Render وبناء الكروت بالـ DOM ======
 function renderProjects(allProjects) {
+    if (!container) return;
     container.innerHTML = '';
     allProjects.forEach(proj => {
         let badgeClass = proj.lang === 'js' ? 'js' : (proj.lang === 'html' ? 'html' : 'node');
@@ -247,25 +246,26 @@ function renderProjects(allProjects) {
 }
 
 // ====== التحكم بالـ Modal وإرسال الفورم ======
-openModalBtn.onclick = () => modal.style.display = 'flex';
-closeModalBtn.onclick = () => modal.style.display = 'none';
-window.onclick = (e) => { if(e.target === modal) modal.style.display = 'none'; }
+if (openModalBtn) openModalBtn.onclick = () => { if (modal) modal.style.display = 'flex'; };
+if (closeModalBtn) closeModalBtn.onclick = () => { if (modal) modal.style.display = 'none'; };
+window.onclick = (e) => { if (modal && e.target === modal) modal.style.display = 'none'; };
 
-form.onsubmit = async (e) => {
-    e.preventDefault();
-    const newProj = {
-        title: document.getElementById('proj-title').value,
-        lang: document.getElementById('proj-lang').value,
-        desc: document.getElementById('proj-desc').value,
-        live: document.getElementById('proj-live').value,
-        repo: document.getElementById('github-repo').value
+if (form) {
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const newProj = {
+            title: document.getElementById('proj-title').value,
+            lang: document.getElementById('proj-lang').value,
+            desc: document.getElementById('proj-desc').value,
+            live: document.getElementById('proj-live').value,
+            repo: document.getElementById('github-repo').value
+        };
+
+        fullData.projects.push(newProj);
+        renderProjects([...defaultProjects, ...fullData.projects]);
+        form.reset();
+        if (modal) modal.style.display = 'none';
+        
+        await updateDataOnDrive();
     };
-
-    fullData.projects.push(newProj);
-    renderProjects([...defaultProjects, ...fullData.projects]);
-    form.reset();
-    modal.style.display = 'none';
-    
-    // رفع التعديل فوراً للسحابة
-    await updateDataOnDrive();
-};
+}
