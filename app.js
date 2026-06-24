@@ -2,11 +2,20 @@
 const CLIENT_ID = '265333396119-7pdoruuiu9h3v59gremlndjpmnbn59ck.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file'; 
 
+// ⚠️ ضع هنا الـ ID الخاص بملف novium_dash_data.json من جوجل درايف الخاص بك
+const FILE_ID = 'https://drive.google.com/file/d/1aM4Wf2lK-sJVZNVcrp_7sgl0-gCPyA-B/view?usp=drive_link'; 
+
+// 📧 إيميلات الأدمنز المسموح لهم بالتعديل ورفع الصور الشخصية
+const ADMIN_EMAILS = {
+    yousef: 'hak307gaming@gmail.com',
+    mohamed: '#'
+};
+
 let tokenClient;
 let gapiInited = false;
 let gisiInited = false;
-let fileId = null;
-let customProjects = []; // مصفوفة المشاريع المخزنة سحابياً
+let fileId = FILE_ID; 
+let fullData = { profiles: { yousef: {}, mohamed: {} }, projects: [] };
 
 // المشاريع الافتراضية الثابتة
 const defaultProjects = [
@@ -33,14 +42,17 @@ const defaultProjects = [
     }
 ];
 
-// جلب عناصر الـ DOM الأساسية
+// جلب عناصر الـ DOM
 const container = document.getElementById('projects-container');
 const modal = document.getElementById('project-modal');
 const openModalBtn = document.getElementById('open-modal-btn');
 const closeModalBtn = document.getElementById('close-modal-btn');
 const form = document.getElementById('add-project-form');
+const userAvatar = document.getElementById('user-avatar');
+const avatarUpload = document.getElementById('avatar-upload');
+const uploadOverlay = document.getElementById('upload-overlay');
+const userDisplayName = document.getElementById('user-display-name');
 
-// ====== 1. تشغيل مكاتب جوجل وتهيئتها تلقائياً ======
 function gapiLoaded() { gapi.load('client', initializeGapiClient); }
 async function initializeGapiClient() {
     await gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] });
@@ -58,40 +70,66 @@ function maybeEnableAuth() {
     if (gapiInited && gisiInited) { checkExistingAuth(); }
 }
 
-// ====== 2. التحقق من حالة المستخدم الحالي (أنت أم زائر) ======
-function checkExistingAuth() {
+// ====== التحقق من الهوية والصلاحيات ======
+async function checkExistingAuth() {
     const savedToken = localStorage.getItem('google_drive_token');
-    if (savedToken) {
+    const savedEmail = localStorage.getItem('logged_in_email');
+
+    if (savedToken && (savedEmail === ADMIN_EMAILS.yousef || savedEmail === ADMIN_EMAILS.mohamed)) {
+        // مستخدم أدمن مسجل (أنت أو محمد)
         gapi.client.setToken(JSON.parse(savedToken));
         document.getElementById('login-btn').style.display = 'none';
         document.getElementById('logout-btn').style.display = 'inline-block';
         document.getElementById('user-status').innerText = 'وضع التحكم 👑 (سحابي متصل)';
+        
         showAdminUI(true);
-        startDriveApp();
+        setupAvatarUpload(savedEmail);
+        await loadDataHub(true);
     } else {
+        // زائر عادي أو حساب موحد (Guest Mode)
         document.getElementById('login-btn').style.display = 'inline-block';
         document.getElementById('logout-btn').style.display = 'none';
         document.getElementById('user-status').innerText = 'وضع الزائر 👀 (عرض فقط)';
+        
         showAdminUI(false);
-        renderProjects(defaultProjects); // عرض الافتراضي فقط للزائر
+        // إعادة تعيين الواجهة لملف التيم الافتراضي
+        userAvatar.src = 'assets/logo.jpg';
+        userDisplayName.innerText = 'NoviumNodes Team';
+        uploadOverlay.style.display = 'none';
+        
+        await loadDataHub(false); // تحميل سحابي للقراءة فقط للـ Guest
     }
 }
 
-// ====== 3. منطق تسجيل الدخول والخروج ======
+// ====== تسجيل الدخول وفك التوكن لمعرفة الإيميل ======
 function handleAuthClick() {
     tokenClient.callback = async (resp) => {
         if (resp.error !== undefined) throw (resp);
         localStorage.setItem('google_drive_token', JSON.stringify(gapi.client.getToken()));
+        
+        // جلب بيانات الإيميل لمعرفة من قام بتسجيل الدخول
+        try {
+            const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${resp.access_token}` }
+            });
+            const userData = await userInfo.json();
+            localStorage.setItem('logged_in_email', userData.email);
+        } catch(e) {
+            console.error("خطأ في جلب بيانات الإيميل:", e);
+        }
+        
         checkExistingAuth();
     };
     tokenClient.requestAccessToken({prompt: 'consent'});
 }
+
 function handleSignoutClick() {
     const token = gapi.client.getToken();
     if (token !== null) {
         google.accounts.oauth2.revokeToken(token.access_token);
         gapi.client.setToken('');
         localStorage.removeItem('google_drive_token');
+        localStorage.removeItem('logged_in_email');
         location.reload();
     }
 }
@@ -101,67 +139,91 @@ function showAdminUI(isAdmin) {
     adminElements.forEach(el => el.style.display = isAdmin ? 'flex' : 'none');
 }
 
-// ====== 4. التزامن مع ملف الـ JSON السحابي في جوجل درايف ======
-async function startDriveApp() {
+// ====== التعامل مع الصور السحابية وتفعيل الـ Upload للأدمن ======
+function setupAvatarUpload(email) {
+    // تفعيل ظهور طبقة الرفع عند الوقوف بالماوس
+    const container = document.getElementById('avatar-container');
+    container.onmouseenter = () => uploadOverlay.style.display = 'flex';
+    container.onmouseleave = () => uploadOverlay.style.display = 'none';
+    uploadOverlay.onclick = () => avatarUpload.click();
+
+    // معالجة اختيار ملف صورة جديد وتحويله لـ Base64
+    avatarUpload.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            const base64Img = reader.result;
+            userAvatar.src = base64Img; // عرضها فوري
+            
+            // حفظ الصورة في الجزء الخاص بالمستخدم داخل الـ JSON
+            if (email === ADMIN_EMAILS.yousef) {
+                fullData.profiles.yousef.avatar = base64Img;
+                fullData.profiles.yousef.name = "Yousef Mohammed";
+            } else if (email === ADMIN_EMAILS.mohamed) {
+                fullData.profiles.mohamed.avatar = base64Img;
+                fullData.profiles.mohamed.name = "Mohamed";
+            }
+            
+            await updateDataOnDrive();
+        };
+        reader.readAsDataURL(file);
+    };
+}
+
+// ====== جلب البيانات سحابياً (يدعم الأدمن والـ Guest المجهول) ======
+async function loadDataHub(isAdmin) {
     try {
-        const response = await gapi.client.drive.files.list({
-            q: "name='novium_dash_data.json' and trashed=false",
-            fields: 'files(id, name)',
-            spaces: 'drive'
-        });
-        const files = response.result.files;
-        if (files && files.length > 0) {
-            fileId = files[0].id;
-            readDataFromDrive();
+        let response;
+        if (isAdmin) {
+            // الأدمن يقرأ عبر مكتبة GAPI الموثقة بالتوكن
+            response = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });
+            fullData = response.result || { profiles: { yousef: {}, mohamed: {} }, projects: [] };
         } else {
-            createNewDataFile();
+            // الـ Guest يقرأ بطلب فتش عام بدون توكن نهائياً لضمان الأمان الفولاذي
+            const fetchRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=حط_هنا_API_KEY_لو_أردت_أو_اتركه_يعتمد_على_العام`);
+            fullData = await fetchRes.json();
         }
-    } catch (err) { console.error('Error starting drive integration:', err); }
-}
 
-async function readDataFromDrive() {
-    try {
-        const response = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });
-        customProjects = response.result || [];
-        // دمج المشاريع الأساسية الثابتة مع القادمة من الدرايف وعرضها
-        renderProjects([...defaultProjects, ...customProjects]);
-    } catch (err) { console.error('Error reading file from Drive', err); }
-}
+        // التأكد من هيكلة الملف الإجمالية لحمايته من الأخطاء
+        if (!fullData.projects) fullData.projects = [];
+        if (!fullData.profiles) fullData.profiles = { yousef: {}, mohamed: {} };
 
-async function createNewDataFile() {
-    const boundary = 'foo_bar_baz';
-    const delimiter = "\r\n--" + boundary + "\r\n";
-    const close_delim = "\r\n--" + boundary + "--";
-    const metadata = { 'name': 'novium_dash_data.json', 'mimeType': 'application/json' };
+        // تخصيص الاسم والصورة بناءً على هوية الشخص المسجل
+        if (isAdmin) {
+            const email = localStorage.getItem('logged_in_email');
+            if (email === ADMIN_EMAILS.yousef) {
+                userDisplayName.innerText = fullData.profiles.yousef.name || "Yousef Mohammed";
+                userAvatar.src = fullData.profiles.yousef.avatar || "assets/logo.jpg";
+            } else if (email === ADMIN_EMAILS.mohamed) {
+                userDisplayName.innerText = fullData.profiles.mohamed.name || "Mohamed";
+                userAvatar.src = fullData.profiles.mohamed.avatar || "assets/logo.jpg";
+            }
+        }
 
-    const multipartRequestBody =
-        delimiter + 'Content-Type: application/json\r\n\r\n' + JSON.stringify(metadata) +
-        delimiter + 'Content-Type: application/json\r\n\r\n' + JSON.stringify([]) + close_delim;
+        // دمج المشاريع الثابتة مع الديناميكية المرفوعة سحابياً وعرضها للكل
+        renderProjects([...defaultProjects, ...fullData.projects]);
 
-    try {
-        const response = await gapi.client.request({
-            'path': '/upload/drive/v3/files', 'method': 'POST',
-            'params': {'uploadType': 'multipart'},
-            'headers': { 'Content-Type': 'multipart/related; boundary="' + boundary + '"' },
-            'body': multipartRequestBody
-        });
-        fileId = response.result.id;
-        customProjects = [];
+    } catch (err) {
+        console.error('فشل في مزامنة البيانات السحابية، تحويل للافتراضي فقط:', err);
         renderProjects(defaultProjects);
-    } catch (err) { console.error('Error creating base file on drive', err); }
+    }
 }
 
+// ====== تحديث البيانات على الدرايف (مغلق ومحمي للأدمن فقط) ======
 async function updateDataOnDrive() {
     if (!fileId) return;
     try {
         await gapi.client.request({
             'path': '/upload/drive/v3/files/' + fileId, 'method': 'PATCH',
-            'params': {'uploadType': 'media'}, 'body': JSON.stringify(customProjects)
+            'params': {'uploadType': 'media'}, 'body': JSON.stringify(fullData)
         });
-    } catch (err) { console.error('Error syncing dynamic data to Google Drive', err); }
+        console.log("تم الحفظ السحابي بنجاح! ✔️");
+    } catch (err) { console.error('خطأ أثناء رفع البيانات المحدثة للدرايف:', err); }
 }
 
-// ====== 5. دالة الـ Render وبناء الكروت بالـ DOM ======
+// ====== دالة الـ Render وبناء الكروت بالـ DOM ======
 function renderProjects(allProjects) {
     container.innerHTML = '';
     allProjects.forEach(proj => {
@@ -184,7 +246,7 @@ function renderProjects(allProjects) {
     });
 }
 
-// ====== 6. التحكم بالـ Modal وإرسال الفورم ======
+// ====== التحكم بالـ Modal وإرسال الفورم ======
 openModalBtn.onclick = () => modal.style.display = 'flex';
 closeModalBtn.onclick = () => modal.style.display = 'none';
 window.onclick = (e) => { if(e.target === modal) modal.style.display = 'none'; }
@@ -199,11 +261,11 @@ form.onsubmit = async (e) => {
         repo: document.getElementById('github-repo').value
     };
 
-    customProjects.push(newProj);
-    renderProjects([...defaultProjects, ...customProjects]);
+    fullData.projects.push(newProj);
+    renderProjects([...defaultProjects, ...fullData.projects]);
     form.reset();
     modal.style.display = 'none';
     
-    // رفع وحفظ الملف المحدث على درايف سحابياً فوراً
+    // رفع التعديل فوراً للسحابة
     await updateDataOnDrive();
 };
