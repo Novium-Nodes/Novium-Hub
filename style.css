@@ -88,3 +88,23 @@ body {
   animation: shimmer 2s infinite;
   content: '';
 }
+
+/* ======================================================== */
+/* إصلاح محاذاة كروت المشاريع للنص الإنجليزي (Left-to-Right) */
+/* ======================================================== */
+#projects-grid > div {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+#projects-grid p, 
+#projects-grid h3,
+#projects-grid span {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+#projects-grid .flex, 
+#projects-grid flex-row {
+  direction: ltr !important;
+}
