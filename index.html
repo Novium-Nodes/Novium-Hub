@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- استدعاء مكتبة Supabase الرسمية -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -24,8 +23,8 @@
     <div class="container">
         <div id="auth-controls" class="auth-bar">
             <span id="user-status">جاري فحص الجلسة...</span>
-            <button id="login-btn" onclick="handleAuthClick()"><i class="fas fa-lock"></i> لوحة التحكم</button>
-            <button id="logout-btn" onclick="handleSignoutClick()" style="display: none;"><i class="fas fa-sign-out-alt"></i> خروج</button>
+            <button id="login-btn"><i class="fas fa-lock"></i> لوحة التحكم</button>
+            <button id="logout-btn" style="display: none;" onclick="handleSignoutClick()"><i class="fas fa-sign-out-alt"></i> خروج</button>
         </div>
 
         <header class="profile-header">
@@ -54,6 +53,22 @@
         <footer>
             <p>© 2026 NoviumNodes. جميع الحقوق محفوظة.</p>
         </footer>
+    </div>
+
+    <div id="login-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>تسجيل دخول الإدارة 👑</h3>
+                <button id="close-login-btn" class="close-btn">&times;</button>
+            </div>
+            <form id="admin-login-form">
+                <div class="form-group">
+                    <label for="admin-pass">كلمة المرور الموحدة:</label>
+                    <input type="password" id="admin-pass" placeholder="••••••••••••" required style="direction: ltr; text-align: center;">
+                </div>
+                <button type="submit" class="submit-btn">دخول لوحة التحكم 🕶️</button>
+            </form>
+        </div>
     </div>
 
     <div id="project-modal" class="modal-overlay">
