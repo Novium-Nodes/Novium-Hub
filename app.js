@@ -2,10 +2,10 @@
 const SUPABASE_URL = 'https://hrqwlanfszvexskpcwrr.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_dabEo0c4_bPa1a6I9KiI6A_gOJp2sm-';
 
-// إنشاء عميل Supabase
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// إنشاء عميل Supabase باسم متغير فريد لتفادي التكرار
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// كلمة مرور الأدمن الافتراضية للوحة التحكم (يمكنك تغييرها أنت ومحمد)
+// كلمة مرور الأدمن الافتراضية للوحة التحكم
 const ADMIN_PASSWORD = 'NoviumNodesAdmin2026';
 
 // المشاريع الافتراضية الثابتة (تظهر في حال كان السيرفر فارغاً)
@@ -100,8 +100,8 @@ function showAdminUI(isAdmin) {
 // ====== جلب المشاريع من السيرفر وعرضها ======
 async function loadProjectsFromSupabase() {
     try {
-        // جلب البيانات من جدول projects
-        const { data, error } = await supabase
+        // جلب البيانات من جدول projects باستخدام العميل المعدل
+        const { data, error } = await supabaseClient
             .from('projects')
             .select('*')
             .order('id', { ascending: false });
@@ -129,7 +129,7 @@ function renderProjects(allProjects) {
         let badgeClass = proj.lang === 'js' ? 'js' : (proj.lang === 'html' ? 'html' : 'node');
         let badgeText = proj.lang === 'js' ? 'JAVASCRIPT' : (proj.lang === 'html' ? 'HTML / CSS' : 'NODE.JS');
 
-        // التحقق من وجود صورة للمشروع أو وضع صورة افتراضية كودينج
+        // التحقق من وجود صورة للمشروع أو إخفاء الحاوية إذا لم توجد
         let imageTag = proj.image_url 
             ? `<div class="project-card-image" style="width:100%; height:180px; overflow:hidden; border-radius:12px; margin-bottom:15px;">
                     <img src="${proj.image_url}" style="width:100%; height:100%; object-fit:cover;">
@@ -142,10 +142,10 @@ function renderProjects(allProjects) {
             ${imageTag}
             <div class="card-content">
                 <h3>${proj.title} <span class="badge ${badgeClass}">${badgeText}</span></h3>
-                <p>${proj.desc}</p>
+                <p>${proj.description || proj.desc}</p>
                 <div class="card-actions">
-                    <a href="${proj.live}" target="_blank" class="project-btn live-btn"><i class="fas fa-external-link-alt"></i> فتح المشروع</a>
-                    <a href="${proj.repo}" target="_blank" class="project-btn repo-btn"><i class="fab fa-github"></i> المستودع</a>
+                    <a href="${proj.live_url || proj.live}" target="_blank" class="project-btn live-btn"><i class="fas fa-external-link-alt"></i> فتح المشروع</a>
+                    <a href="${proj.github_url || proj.repo}" target="_blank" class="project-btn repo-btn"><i class="fab fa-github"></i> المستودع</a>
                 </div>
             </div>
         `;
@@ -177,20 +177,20 @@ if (form) {
         let image_url = null;
 
         try {
-            // 1. إذا قام المستخدم برفع صورة، يتم رفعها أولاً في الـ Storage Bucket
+            // 1. إذا قام المستخدم برفع صورة، يتم رفعها أولاً في الـ Storage Bucket باستخدام العميل المعدل
             if (imageFile) {
                 const fileExt = imageFile.name.split('.').pop();
                 const fileName = `${Date.now()}.${fileExt}`;
                 const filePath = `${fileName}`;
 
-                const { data: uploadData, error: uploadError } = await supabase.storage
+                const { data: uploadData, error: uploadError } = await supabaseClient.storage
                     .from('project-images')
                     .upload(filePath, imageFile);
 
                 if (uploadError) throw uploadError;
 
                 // الحصول على الرابط العام المباشر للصورة المرفوعة
-                const { data: urlData } = supabase.storage
+                const { data: urlData } = supabaseClient.storage
                     .from('project-images')
                     .getPublicUrl(filePath);
 
@@ -198,10 +198,10 @@ if (form) {
             }
 
             // 2. إدخال البيانات النصية كاملة داخل جدول projects في الـ Database
-            const { error: insertError } = await supabase
+            const { error: insertError } = await supabaseClient
                 .from('projects')
                 .insert([
-                    { title, description: desc, live_url, github_url, image_url }
+                    { title, description: desc, live_url, github_url, image_url, lang }
                 ]);
 
             if (insertError) throw insertError;
@@ -217,8 +217,10 @@ if (form) {
             console.error("حدث خطأ أثناء عملية الحفظ السحابي:", error);
             alert("فشل الرفع: " + error.message);
         } finally {
-            submitBtnText.innerText = "حفظ ونشر المشروع ✨";
-            submitBtnText.disabled = false;
+            if (submitBtnText) {
+                submitBtnText.innerText = "حفظ ونشر المشروع ✨";
+                submitBtnText.disabled = false;
+            }
         }
     };
 }
