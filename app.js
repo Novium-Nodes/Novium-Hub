@@ -487,7 +487,7 @@ function bindEvents() {
         const { error } = await supabaseClient.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: window.location.origin
+            redirectTo: window.location.href
           }
         });
         if (error) throw error;
