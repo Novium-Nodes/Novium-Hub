@@ -24,7 +24,7 @@ const defaultProjects = [
   {
     title: "NoviumPlayer",
     lang: "js",
-    desc: "مشغل موسيقى متطور يدعم واجهة مستخدم زجاجية (Glassmorphic UI) مع ميزات التحكم الكامل وتخصيص تجربة الاستماع والـ Repeat Modes.",
+    desc: "A modern music player with a glassmorphic UI, full controls, and customizable listening experience with repeat modes.",
     live: "https://novium-nodes.github.io/NoviumPlayer/",
     repo: "https://github.com/Novium-Nodes/NoviumPlayer",
     image_url: null
@@ -32,7 +32,7 @@ const defaultProjects = [
   {
     title: "LedgerFlow",
     lang: "html",
-    desc: "تطبيق ويب متكامل لإدارة الميزانية والحسابات المالية بشكل سلس وسريع.",
+    desc: "A web app for seamless budget management and financial tracking with an intuitive interface.",
     live: "https://novium-nodes.github.io/LedgerFlow/",
     repo: "https://github.com/Novium-Nodes/LedgerFlow",
     image_url: null
@@ -40,7 +40,7 @@ const defaultProjects = [
   {
     title: "SubTrack",
     lang: "js",
-    desc: "نظام لإدارة وتتبع الاشتراكات الدورية والتنببه بمواعيد التجديد لتجنب المصاريف الزائدة.",
+    desc: "A subscription tracker that manages recurring payments and renewal reminders to avoid overspending.",
     live: "https://novium-nodes.github.io/SubTrack/",
     repo: "https://github.com/Novium-Nodes/SubTrack",
     image_url: null
@@ -126,7 +126,7 @@ async function startApp() {
     if (elements.supabaseErrorBanner) {
       elements.supabaseErrorBanner.classList.remove('hidden');
       if (elements.supabaseErrorText) {
-        elements.supabaseErrorText.textContent = "تعذر تحميل مكتبة Supabase من الـ CDN. تم تشغيل الوضع المحلي التلقائي.";
+        elements.supabaseErrorText.textContent = "Unable to load Supabase from the CDN. Local fallback mode activated.";
       }
     }
   }
@@ -216,14 +216,14 @@ function updateAuthUI() {
           <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
-          <span class="text-emerald-400">وضع التحكم 👑 (${userSession.user.email})</span>
+          <span class="text-emerald-400">Admin Control 👑 (${userSession.user.email})</span>
         `;
       } else {
         elements.userStatusText.innerHTML = `
           <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
-          <span class="text-amber-400">زائر مسجل 🔑 (${userSession.user.email}) - لا تملك صلاحية تحرير</span>
+          <span class="text-amber-400">Signed-in visitor 🔑 (${userSession.user.email}) - edit access not available</span>
         `;
       }
     }
@@ -253,12 +253,9 @@ function updateAuthUI() {
         <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
         </svg>
-        <span>وضع الزائر 👀 (عرض فقط)</span>
+            <span>Guest Mode 👀 (View only)</span>
       `;
     }
-
-    if (elements.openAddProjectModalBtn) elements.openAddProjectModalBtn.classList.add('hidden');
-    if (elements.adminBadge) elements.adminBadge.classList.add('hidden');
     if (elements.editAvatarBtn) elements.editAvatarBtn.classList.add('hidden');
   }
 
@@ -304,9 +301,9 @@ async function fetchProjects() {
       if (elements.supabaseErrorText) {
         const errMsg = err.message || err.details || String(err);
         if (errMsg.includes('relation "projects" does not exist') || (errMsg.includes('projects') && errMsg.includes('not found'))) {
-          elements.supabaseErrorText.innerHTML = `تم عرض المشاريع الافتراضية محلياً. <strong>جدول المشاريع (projects) غير موجود</strong> في قاعدة بيانات Supabase الخاصة بك. يرجى تهيئة الجداول باستخدام كود الـ SQL أدناه.`;
+          elements.supabaseErrorText.innerHTML = `Default projects are shown locally. <strong>The Supabase projects table is missing</strong> from your database. Please initialize the tables using the SQL below.`;
         } else {
-          elements.supabaseErrorText.textContent = `تم عرض المشاريع الافتراضية محلياً. تفاصيل الخطأ: ${errMsg}`;
+          elements.supabaseErrorText.textContent = `Default projects are shown locally. Error details: ${errMsg}`;
         }
       }
     }
@@ -334,7 +331,7 @@ function renderProjects() {
     elements.projectsGrid.innerHTML = `
       <div class="text-center py-16 bg-slate-900/20 border border-white/5 rounded-2xl">
         <p class="text-slate-400">
-          ${query ? "لم يتم العثور على أي مشاريع تطابق بحثك. 🔍" : "لا توجد مشاريع متاحة حالياً."}
+          ${query ? "No projects matched your search. 🔍" : "No projects available right now."}
         </p>
       </div>
     `;
@@ -347,25 +344,24 @@ function renderProjects() {
     const liveUrl = proj.live_url || proj.live || '';
     const githubUrl = proj.github_url || proj.repo || '';
     const imageUrl = proj.image_url;
-    const lang = (proj.lang || 'js').toLowerCase();
+    const rawLang = proj.lang || 'HTML / CSS / Vanilla JS';
+    const lang = rawLang.toLowerCase();
 
-    let badgeText = 'NODE.JS';
+    let badgeText = rawLang;
     let badgeColor = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
     let langIconSvg = `<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 012-2h10a2 2 0 012 2m-14 0a2 2 0 002 2h10a2 2 0 002-2M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
 
-    if (lang === 'js' || lang === 'javascript') {
-      badgeText = 'JAVASCRIPT';
+    if (lang.includes('javascript')) {
       badgeColor = 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
       langIconSvg = `<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>`;
-    } else if (lang === 'html' || lang === 'css' || lang === 'html/css') {
-      badgeText = 'HTML / CSS';
+    } else if (lang.includes('html') || lang.includes('css')) {
       badgeColor = 'bg-orange-500/20 text-orange-400 border-orange-500/30';
       langIconSvg = `<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>`;
     }
 
     const isDbProject = !!proj.id;
     const deleteButtonHtml = (isAdminUser && isDbProject) ? `
-      <button data-id="${proj.id}" class="delete-project-btn p-2 text-red-400 hover:text-white hover:bg-red-500/10 border border-red-500/20 hover:border-red-500 rounded-xl transition-all duration-300 flex items-center justify-center cursor-pointer" title="حذف المشروع">
+      <button data-id="${proj.id}" class="delete-project-btn p-2 text-red-400 hover:text-white hover:bg-red-500/10 border border-red-500/20 hover:border-red-500 rounded-xl transition-all duration-300 flex items-center justify-center cursor-pointer" title="Delete Project">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
         </svg>
@@ -401,13 +397,13 @@ function renderProjects() {
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
-              <span>فتح المشروع</span>
+              <span>Open Project</span>
             </a>
             <a href="${githubUrl}" target="_blank" rel="noopener noreferrer" class="flex-1 flex items-center justify-center gap-2 py-2 px-4 text-sm font-semibold text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all duration-300">
               <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
                 <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
               </svg>
-              <span>المستودع</span>
+              <span>Repository</span>
             </a>
             ${deleteButtonHtml}
           </div>
@@ -432,7 +428,7 @@ function renderProjects() {
 // Delete Project
 // ----------------------------------------------------
 async function deleteProject(id) {
-  if (!confirm("هل أنت متأكد من حذف هذا المشروع سحابياً؟")) return;
+  if (!confirm("Are you sure you want to delete this project from the cloud?")) return;
 
   try {
     const { error } = await supabaseClient
@@ -442,11 +438,11 @@ async function deleteProject(id) {
 
     if (error) throw error;
 
-    alert("تم حذف المشروع بنجاح من السحابة! ✔️");
+    alert("Project deleted successfully from the cloud! ✔️");
     await fetchProjects();
   } catch (err) {
     console.error('Error deleting:', err);
-    alert("فشل حذف المشروع: " + (err.message || String(err)));
+    alert("Failed to delete project: " + (err.message || String(err)));
   }
 }
 
@@ -461,12 +457,12 @@ function bindEvents() {
     copySqlBtn.addEventListener('click', () => {
       const text = sqlCodeElement.textContent || '';
       navigator.clipboard.writeText(text).then(() => {
-        copySqlBtn.textContent = 'تم نسخ الكود بنجاح! ✔️';
+        copySqlBtn.textContent = 'Code copied successfully! ✔️';
         copySqlBtn.classList.remove('text-slate-300');
         copySqlBtn.classList.add('bg-emerald-600', 'text-white');
         
         setTimeout(() => {
-          copySqlBtn.textContent = 'نسخ الكود 📋';
+          copySqlBtn.textContent = 'Copy SQL 📋';
           copySqlBtn.classList.remove('bg-emerald-600', 'text-white');
           copySqlBtn.classList.add('text-slate-300');
         }, 3000);
@@ -481,7 +477,7 @@ function bindEvents() {
     elements.loginBtn.addEventListener('click', async () => {
       try {
         const textSpan = document.getElementById('login-btn-text');
-        if (textSpan) textSpan.textContent = 'جاري الاتصال...';
+        if (textSpan) textSpan.textContent = 'Connecting...';
         elements.loginBtn.setAttribute('disabled', 'true');
 
         const { error } = await supabaseClient.auth.signInWithOAuth({
@@ -493,9 +489,9 @@ function bindEvents() {
         if (error) throw error;
       } catch (err) {
         console.error('Login error:', err);
-        alert(err.message || 'فشل تسجيل الدخول.');
+        alert(err.message || 'Login failed.');
         const textSpan = document.getElementById('login-btn-text');
-        if (textSpan) textSpan.textContent = 'تسجيل دخول الإدارة (Google)';
+        if (textSpan) textSpan.textContent = 'Admin Sign In (Google)';
         elements.loginBtn.removeAttribute('disabled');
       }
     });
@@ -507,10 +503,11 @@ function bindEvents() {
       try {
         const { error } = await supabaseClient.auth.signOut();
         if (error) throw error;
-        alert("تم تسجيل الخروج بنجاح.");
+        alert("Logged out successfully.");
+        window.location.href = window.location.origin + window.location.pathname;
       } catch (err) {
         console.error(err);
-        alert("فشل تسجيل الخروج.");
+        alert("Logout failed. Please try again.");
       }
     });
   }
@@ -566,7 +563,7 @@ function bindEvents() {
       const file = e.target.files[0];
       if (file && userProfile) {
         try {
-          alert("جاري رفع صورتك سحابياً... ⏳");
+          alert("Uploading your avatar to the cloud... ⏳");
           const fileExt = file.name.split('.').pop();
           const fileName = `avatar-${userProfile.username}-${Date.now()}.${fileExt}`;
           const filePath = `avatars/${fileName}`;
@@ -590,12 +587,12 @@ function bindEvents() {
 
           if (updateError) throw updateError;
 
-          alert("تم تحديث صورتك الشخصية بنجاح سحابياً! ✔️");
+          alert("Your avatar was updated successfully in the cloud! ✔️");
           userProfile.avatar_url = publicUrl;
           updateAuthUI();
         } catch (err) {
           console.error(err);
-          alert("فشل رفع الصورة: يرجى تفعيل الـ Storage Bucket باسم 'project-images' في لوحة تحكم Supabase.");
+          alert("Image upload failed: please enable the 'project-images' Storage Bucket in Supabase.");
         }
       }
     });
@@ -621,14 +618,14 @@ function bindEvents() {
 
           if (error) throw error;
 
-          alert("تم حفظ صورتك الشخصية بنجاح سحابياً! ✔️");
+          alert("Your avatar was saved successfully in the cloud! ✔️");
           elements.urlInputForm.classList.add('hidden');
           elements.avatarUrlInputField.value = '';
           userProfile.avatar_url = inputUrl;
           updateAuthUI();
         } catch (err) {
           console.error(err);
-          alert("خطأ أثناء تحديث الصورة.");
+          alert("Error updating avatar.");
         }
       }
     });
@@ -667,7 +664,7 @@ function bindEvents() {
         if (elements.modalErrorBanner) elements.modalErrorBanner.classList.add('hidden');
         elements.addProjectForm.reset();
         selectedProjectFile = null;
-        if (elements.fileUploadStatusText) elements.fileUploadStatusText.textContent = "انقر هنا أو اسحب الصورة لرفعها";
+        if (elements.fileUploadStatusText) elements.fileUploadStatusText.textContent = "Click here or drag an image to upload";
       }, 300);
     }
   };
@@ -708,7 +705,7 @@ function bindEvents() {
       if (e.target.files && e.target.files[0]) {
         selectedProjectFile = e.target.files[0];
         if (elements.fileUploadStatusText) {
-          elements.fileUploadStatusText.textContent = `تم تحديد الملف: ${selectedProjectFile.name} ✔️`;
+          elements.fileUploadStatusText.textContent = `Selected file: ${selectedProjectFile.name} ✔️`;
         }
       }
     });
@@ -734,7 +731,7 @@ function bindEvents() {
           elements.projImageFileInput.files = e.dataTransfer.files;
         }
         if (elements.fileUploadStatusText) {
-          elements.fileUploadStatusText.textContent = `تم إسقاط وتحديد الملف: ${selectedProjectFile.name} ✔️`;
+          elements.fileUploadStatusText.textContent = `File dropped and selected: ${selectedProjectFile.name} ✔️`;
         }
       }
     });
@@ -752,7 +749,7 @@ function bindEvents() {
       const githubUrl = elements.projGithubUrlInput.value.trim();
 
       if (!title || !description || !liveUrl || !githubUrl) {
-        showModalError("يرجى ملء جميع الحقول المطلوبة.");
+        showModalError("Please fill in all required fields.");
         return;
       }
 
@@ -770,7 +767,7 @@ function bindEvents() {
             .upload(filePath, selectedProjectFile);
 
           if (uploadError) {
-            throw new Error("فشل رفع غلاف الصورة: يرجى تفعيل Storage Bucket باسم 'project-images' أو استخدام خيار رابط الصورة.");
+            throw new Error("Image upload failed: please enable the 'project-images' Storage Bucket or use the image URL option.");
           }
 
           const { data: urlData } = supabaseClient.storage
@@ -798,12 +795,12 @@ function bindEvents() {
 
         if (error) throw error;
 
-        alert("تم رفع ونشر المشروع بنجاح سحابياً! ✔️🚀");
+        alert("Project uploaded and published successfully in the cloud! ✔️🚀");
         hideModal();
         await fetchProjects();
       } catch (err) {
         console.error(err);
-        showModalError(err.message || 'حدث خطأ غير متوقع أثناء حفظ المشروع.');
+        showModalError(err.message || 'An unexpected error occurred while saving the project.');
       } finally {
         setSubmitLoading(false);
       }
@@ -822,10 +819,10 @@ function setSubmitLoading(loading) {
   if (elements.submitProjectBtn) {
     if (loading) {
       elements.submitProjectBtn.setAttribute('disabled', 'true');
-      elements.submitProjectBtn.textContent = 'جاري النشر والحفظ سحابياً... ⏳';
+      elements.submitProjectBtn.textContent = 'Publishing and saving project to cloud... ⏳';
     } else {
       elements.submitProjectBtn.removeAttribute('disabled');
-      elements.submitProjectBtn.textContent = 'نشر وحفظ المشروع سحابياً 🚀';
+      elements.submitProjectBtn.textContent = 'Publish and save project to cloud 🚀';
     }
   }
 }
