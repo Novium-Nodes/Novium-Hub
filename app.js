@@ -2,13 +2,13 @@
 const SUPABASE_URL = 'https://hrqwlanfszvexskpcwrr.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_dabEo0c4_bPa1a6I9KiI6A_gOJp2sm-';
 
-// إنشاء عميل Supabase باسم متغير فريد لتفادي التكرار
+// إنشاء عميل Supabase
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// كلمة مرور الأدمن الافتراضية للوحة التحكم
+// كلمة مرور الأدمن الموحدة للوحة التحكم (منه فيه)
 const ADMIN_PASSWORD = 'NoviumNodesAdmin2026';
 
-// المشاريع الافتراضية الثابتة (تظهر في حال كان السيرفر فارغاً)
+// المشاريع الافتراضية الثابتة
 const defaultProjects = [
     {
         title: "NoviumPlayer",
@@ -38,29 +38,35 @@ const defaultProjects = [
 
 // جلب عناصر الـ DOM
 const container = document.getElementById('projects-container');
-const modal = document.getElementById('project-modal');
+const projectModal = document.getElementById('project-modal');
+const loginModal = document.getElementById('login-modal');
+
 const openModalBtn = document.getElementById('open-modal-btn');
 const closeModalBtn = document.getElementById('close-modal-btn');
-const form = document.getElementById('add-project-form');
+const loginBtn = document.getElementById('login-btn');
+const closeLoginBtn = document.getElementById('close-login-btn');
+
+const projectForm = document.getElementById('add-project-form');
+const loginForm = document.getElementById('admin-login-form');
 const loadingScreen = document.getElementById('loading-screen');
 
-// عند تحميل الصفحة بالكامل
+// عند تحميل الصفحة
 window.addEventListener('load', async () => {
     await checkAdminStatus();
     await loadProjectsFromSupabase();
 });
 
-// ====== التحقق من وضع الأدمن الحالي ======
+// ====== فحص حالة تسجيل الدخول المحفوظة ======
 async function checkAdminStatus() {
     const isAdmin = localStorage.getItem('is_novium_admin') === 'true';
 
     if (isAdmin) {
-        document.getElementById('login-btn').style.display = 'none';
+        if (loginBtn) loginBtn.style.display = 'none';
         document.getElementById('logout-btn').style.display = 'inline-block';
         document.getElementById('user-status').innerText = 'وضع التحكم 👑 (سحابي متصل)';
         showAdminUI(true);
     } else {
-        document.getElementById('login-btn').style.display = 'inline-block';
+        if (loginBtn) loginBtn.style.display = 'inline-block';
         document.getElementById('logout-btn').style.display = 'none';
         document.getElementById('user-status').innerText = 'وضع الزائر 👀 (عرض فقط)';
         showAdminUI(false);
@@ -75,16 +81,34 @@ function hideLoading() {
     }
 }
 
-// ====== تسجيل الدخول (لوحة التحكم) ======
-function handleAuthClick() {
-    const passwordInput = prompt("برجاء إدخال كلمة مرور لوحة تحكم NoviumNodes:");
-    if (passwordInput === ADMIN_PASSWORD) {
-        localStorage.setItem('is_novium_admin', 'true');
-        alert("أهلاً بك يا صانع الإبداع! تم تفعيل وضع التحكم 👑");
-        location.reload();
-    } else if (passwordInput !== null) {
-        alert("كلمة المرور خاطئة! يرجى المحاولة مرة أخرى.");
-    }
+// ====== إدارة نوافذ الـ Modals (إظهار وإخفاء) ======
+if (loginBtn) loginBtn.onclick = () => { if (loginModal) loginModal.style.display = 'flex'; };
+if (closeLoginBtn) closeLoginBtn.onclick = () => { if (loginModal) loginModal.style.display = 'none'; };
+
+if (openModalBtn) openModalBtn.onclick = () => { if (projectModal) projectModal.style.display = 'flex'; };
+if (closeModalBtn) closeModalBtn.onclick = () => { if (projectModal) projectModal.style.display = 'none'; };
+
+window.onclick = (e) => {
+    if (e.target === projectModal) projectModal.style.display = 'none';
+    if (e.target === loginModal) loginModal.style.display = 'none';
+};
+
+// ====== معالجة نموذج تسجيل الدخول بالباسورد الموحد ======
+if (loginForm) {
+    loginForm.onsubmit = (e) => {
+        e.preventDefault();
+        const inputPass = document.getElementById('admin-pass').value;
+
+        if (inputPass === ADMIN_PASSWORD) {
+            localStorage.setItem('is_novium_admin', 'true');
+            alert("أهلاً بك يا صانع الإبداع! تم تفعيل وضع التحكم 👑");
+            if (loginModal) loginModal.style.display = 'none';
+            location.reload();
+        } else {
+            alert("❌ كلمة المرور الموحدة خاطئة! حاول مرة أخرى.");
+            document.getElementById('admin-pass').value = '';
+        }
+    };
 }
 
 function handleSignoutClick() {
@@ -100,7 +124,6 @@ function showAdminUI(isAdmin) {
 // ====== جلب المشاريع من السيرفر وعرضها ======
 async function loadProjectsFromSupabase() {
     try {
-        // جلب البيانات من جدول projects باستخدام العميل المعدل
         const { data, error } = await supabaseClient
             .from('projects')
             .select('*')
@@ -109,7 +132,6 @@ async function loadProjectsFromSupabase() {
         if (error) throw error;
 
         if (data && data.length > 0) {
-            // دمج المشاريع الافتراضية مع المشاريع القادمة من السيرفر
             renderProjects([...defaultProjects, ...data]);
         } else {
             renderProjects(defaultProjects);
@@ -120,7 +142,7 @@ async function loadProjectsFromSupabase() {
     }
 }
 
-// ====== دالة بناء وتصميم كروت المشاريع (Render) ======
+// ====== تصميم وعرض كروت المشاريع ======
 function renderProjects(allProjects) {
     if (!container) return;
     container.innerHTML = '';
@@ -129,7 +151,6 @@ function renderProjects(allProjects) {
         let badgeClass = proj.lang === 'js' ? 'js' : (proj.lang === 'html' ? 'html' : 'node');
         let badgeText = proj.lang === 'js' ? 'JAVASCRIPT' : (proj.lang === 'html' ? 'HTML / CSS' : 'NODE.JS');
 
-        // التحقق من وجود صورة للمشروع أو إخفاء الحاوية إذا لم توجد
         let imageTag = proj.image_url 
             ? `<div class="project-card-image" style="width:100%; height:180px; overflow:hidden; border-radius:12px; margin-bottom:15px;">
                     <img src="${proj.image_url}" style="width:100%; height:100%; object-fit:cover;">
@@ -153,19 +174,16 @@ function renderProjects(allProjects) {
     });
 }
 
-// ====== التحكم بظهور وإخفاء الـ Modal ======
-if (openModalBtn) openModalBtn.onclick = () => { if (modal) modal.style.display = 'flex'; };
-if (closeModalBtn) closeModalBtn.onclick = () => { if (modal) modal.style.display = 'none'; };
-window.onclick = (e) => { if (modal && e.target === modal) modal.style.display = 'none'; };
-
 // ====== إرسال وحفظ مشروع جديد على السيرفر ======
-if (form) {
-    form.onsubmit = async (e) => {
+if (projectForm) {
+    projectForm.onsubmit = async (e) => {
         e.preventDefault();
         
         const submitBtnText = document.getElementById('submit-btn-text');
-        submitBtnText.innerText = "جاري الرفع والنشر... ⏳";
-        submitBtnText.disabled = true;
+        if (submitBtnText) {
+            submitBtnText.innerText = "جاري الرفع والنشر... ⏳";
+            submitBtnText.disabled = true;
+        }
 
         const title = document.getElementById('proj-title').value;
         const lang = document.getElementById('proj-lang').value;
@@ -177,7 +195,7 @@ if (form) {
         let image_url = null;
 
         try {
-            // 1. إذا قام المستخدم برفع صورة، يتم رفعها أولاً في الـ Storage Bucket باستخدام العميل المعدل
+            // الرفع للمخزن إذا تم اختيار صورة
             if (imageFile) {
                 const fileExt = imageFile.name.split('.').pop();
                 const fileName = `${Date.now()}.${fileExt}`;
@@ -189,7 +207,6 @@ if (form) {
 
                 if (uploadError) throw uploadError;
 
-                // الحصول على الرابط العام المباشر للصورة المرفوعة
                 const { data: urlData } = supabaseClient.storage
                     .from('project-images')
                     .getPublicUrl(filePath);
@@ -197,7 +214,7 @@ if (form) {
                 image_url = urlData.publicUrl;
             }
 
-            // 2. إدخال البيانات النصية كاملة داخل جدول projects في الـ Database
+            // الحفظ في قاعدة البيانات
             const { error: insertError } = await supabaseClient
                 .from('projects')
                 .insert([
@@ -207,10 +224,9 @@ if (form) {
             if (insertError) throw insertError;
 
             alert("تم رفع ونشر المشروع بنجاح سحابياً! ✔️🚀");
-            form.reset();
-            if (modal) modal.style.display = 'none';
+            projectForm.reset();
+            if (projectModal) projectModal.style.display = 'none';
             
-            // إعادة تحديث القائمة فورياً من السيرفر
             await loadProjectsFromSupabase();
 
         } catch (error) {
