@@ -7,14 +7,14 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://apis.google.com/js/api.js" async defer></script>
+    <!-- استدعاء مكتبة Supabase الرسمية -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
     <div id="loading-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0b10; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #00f0ff; font-family: sans-serif;">
         <div class="loader-spinner" style="border: 4px solid rgba(0, 240, 255, 0.1); border-left-color: #00f0ff; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
-        <div style="letter-spacing: 2px; font-weight: bold; text-shadow: 0 0 10px #00f0ff; direction: ltr;">CONNECTING TO NOVIUM_CLOUD...</div>
+        <div style="letter-spacing: 2px; font-weight: bold; text-shadow: 0 0 10px #00f0ff; direction: ltr;">CONNECTING TO NOVIUM_SUPABASE...</div>
     </div>
 
     <style>
@@ -24,16 +24,16 @@
     <div class="container">
         <div id="auth-controls" class="auth-bar">
             <span id="user-status">جاري فحص الجلسة...</span>
-            <button id="login-btn" onclick="handleAuthClick()" style="display: none;"><i class="fab fa-google"></i> تسجيل الدخول</button>
+            <button id="login-btn" onclick="handleAuthClick()"><i class="fas fa-lock"></i> لوحة التحكم</button>
             <button id="logout-btn" onclick="handleSignoutClick()" style="display: none;"><i class="fas fa-sign-out-alt"></i> خروج</button>
         </div>
 
         <header class="profile-header">
             <div class="avatar-wrapper" id="avatar-container">
-                <img src="assets/logo.jpg" alt="Yousef" class="avatar" id="user-avatar">
+                <img src="assets/logo.jpg" alt="NoviumNodes" class="avatar" id="user-avatar">
             </div>
             <h1 id="user-display-name">NoviumNodes Team</h1>
-            <p class="subtitle">Full-Stack Web Developer & Cybersecurity Enthusiast</p>
+            <p class="subtitle">Full-Stack Web Developers & Cyber Security Enthusiasts</p>
             <div class="social-links">
                 <a href="https://github.com/Novium-Nodes" target="_blank" title="GitHub"><i class="fab fa-github"></i></a>
                 <a href="#" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
@@ -59,7 +59,7 @@
     <div id="project-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>إضافة مشروع جديد للمشغل/البورتفوليو</h3>
+                <h3>إضافة مشروع جديد للوحة التحكم</h3>
                 <button id="close-modal-btn" class="close-btn">&times;</button>
             </div>
             <form id="add-project-form">
@@ -87,7 +87,11 @@
                     <label for="proj-repo">رابط مستودع جيت هب (Repository):</label>
                     <input type="url" id="github-repo" placeholder="https://github.com/.../..." required>
                 </div>
-                <button type="submit" class="submit-btn">حفظ ونشر المشروع ✨</button>
+                <div class="form-group">
+                    <label for="proj-image">صورة المشروع (اختياري):</label>
+                    <input type="file" id="proj-image" accept="image/*">
+                </div>
+                <button type="submit" class="submit-btn" id="submit-btn-text">حفظ ونشر المشروع ✨</button>
             </form>
         </div>
     </div>
